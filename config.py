@@ -7,8 +7,8 @@ class AppConfig:
     db_host : str = "127.0.0.1"
     db_port: int = 5432
     db_name: str = "photon"
-    db_user: str = "postgres"
-    db_password: str = ""
+    db_user: str = "student"
+    db_password: str = "student"
     
     # UDP config
     
