@@ -34,7 +34,7 @@ class PlayerDB:
                 INSERT INTO players (id, codename)
                 VALUES (%s, %s)
                 ON CONFLICT (id)
-                DO NOT UPDATE SET codename = EXCLUDED.codename
+                DO UPDATE SET codename = EXCLUDED.codename
                 """,
                 (player_id, codename),
             )
