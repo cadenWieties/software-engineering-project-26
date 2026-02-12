@@ -20,7 +20,7 @@ class PlayerDB:
     def get_codename(self, player_id: int) -> Optional[str]:
         # Returns codename if player exists, else None
         with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT codename FROM players WHERE player_id = %s", (player_id,))
+            cur.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
             row = cur.fetchone()
             return row["codename"] if row else None
         
@@ -31,9 +31,9 @@ class PlayerDB:
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO players (player_id, codename)
+                INSERT INTO players (id, codename)
                 VALUES (%s, %s)
-                ON CONFLICT (player_id)
+                ON CONFLICT (id)
                 DO NOT UPDATE SET codename = EXCLUDED.codename
                 """,
                 (player_id, codename),
