@@ -30,14 +30,16 @@ class PlayerDB:
         # If player_id already exists, this will update codename
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                INSERT INTO players (id, codename)
-                VALUES (%s, %s)
-                ON CONFLICT (id)
-                DO UPDATE SET codename = EXCLUDED.codename
-                """,
-                (player_id, codename),
+                "UPDATE players SET codename = %s WHERE id = %s",
+                (codename, player_id),
             )
+            
+            # If no row updated, insert new
+            if cur.rowCount == 0:
+                cur.execute(
+                    "INSERT INTO players (id, codename) VALUES (%s, %s)",
+                    (player_id, codename),
+                )
     
     def close(self):
         self.conn.close()
