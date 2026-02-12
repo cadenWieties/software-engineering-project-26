@@ -2,6 +2,7 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from config import AppConfig
+from typing import Optional
 
 class PlayerDB:
     
@@ -16,7 +17,7 @@ class PlayerDB:
         )
         self.conn.autocommit = True
     
-    def get_codename(self, player_id: int) -> str | None:
+    def get_codename(self, player_id: int) -> Optional[str]:
         # Returns codename if player exists, else None
         with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT codename FROM players WHERE player_id = %s", (player_id,))
