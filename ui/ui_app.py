@@ -6,6 +6,10 @@ from tkinter import ttk, messagebox
 from splash import SplashScreen
 from entry_screen import PlayerEntryScreen
 
+# Backend imports
+from config import AppConfig
+from db import PlayerDB
+from udp_comm import UDPComm
 
 # isolated laptop testing
 
@@ -61,8 +65,9 @@ def main():
     root.withdraw()
 
     # Create services
-    db = MockDB()
-    udp = MockUDP()
+    cfg = AppConfig()
+    db = PlayerDB(cfg)
+    udp = UDPComm(cfg)
 
     container = ttk.Frame(root)
     container.pack(fill="both", expand=True)
@@ -87,6 +92,19 @@ def main():
 
     root.mainloop()
 
+    def on_close():
+        # Closing function
+        try:
+            db.close()
+        except Exception:
+            pass
+        try:
+            udp.close()
+        except Exception:
+            pass
+        root.destroy()
+    
+    root.protocol("WM_DELETE_WINDOW", on_close)
 
 if __name__ == "__main__":
     main()

@@ -188,7 +188,10 @@ class PlayerEntryScreen(ttk.Frame):
 
         # DB lookup, and if not found, add new codename
         existing = self.db.get_codename(pid)
-        if not existing:
+        if existing:
+            codename = existing
+            self.codename_var.set(existing)
+        else:
             self.db.add_player(pid, codename)
 
         # Add to roster list
