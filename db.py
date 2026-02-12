@@ -29,8 +29,12 @@ class PlayerDB:
         # If player_id already exists, this will update codename
         with self.conn.cursor() as cur:
             cur.execute(
-                # Insert into players (player_id, codename)
-                # Values (%s, %s), on conflict: (player_id)
+                """
+                INSERT INTO players (player_id, codename)
+                VALUES (%s, %s)
+                ON CONFLICT (player_id)
+                DO NOT UPDATE SET codename = EXCLUDED.codename
+                """,
                 (player_id, codename),
             )
     

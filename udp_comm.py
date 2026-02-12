@@ -20,7 +20,11 @@ class UDPComm:
         
         self._stop = threading.Event()
         self._thread = None
-        
+    
+    @property
+    def target_ip(self) -> str:
+        # Returns target IP
+        return self.cfg.udp_target_ip
     
     def set_target_ip(self, ip: str) -> None:
         # Change network address used for UDP sends
