@@ -35,7 +35,7 @@ class PlayerDB:
             )
             
             # If no row updated, insert new
-            if cur.rowCount == 0:
+            if cur.rowcount == 0:
                 cur.execute(
                     "INSERT INTO players (id, codename) VALUES (%s, %s)",
                     (player_id, codename),
