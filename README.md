@@ -9,8 +9,10 @@ Sprint2 Includes:
 5. Ability to change UDP target IP
 
 ## Team Members and Git
-cadenWieties --> Caden Wieties
-EJoeCodes --> Ethan Mulder
+| GitHub Username | Real Name |
+|---|---|
+| cadenWieties | Caden Wieties |
+| EJoeCodes | Ethan Mulder |
 
 ## Requirements
 Run on the Debian VM, Python3, python-venv, python3-tk, Postgres
