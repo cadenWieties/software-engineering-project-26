@@ -1,11 +1,9 @@
 # db.py
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from config import AppConfig
 from typing import Optional
+import psycopg2
+from config import AppConfig
 
 class PlayerDB:
-    
     def __init__(self, cfg: AppConfig):
         self.cfg = cfg
         self.conn = psycopg2.connect(
@@ -16,30 +14,35 @@ class PlayerDB:
             password=cfg.db_password,
         )
         self.conn.autocommit = True
-    
+        self._create_table_if_needed()
+
+    def _create_table_if_needed(self) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS players (
+                    id INTEGER PRIMARY KEY,
+                    codename VARCHAR(50) NOT NULL
+                )
+            """)
+
     def get_codename(self, player_id: int) -> Optional[str]:
-        # Returns codename if player exists, else None
-        with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT codename FROM players WHERE id = %s", (player_id,))
-            row = cur.fetchone()
-            return row["codename"] if row else None
-        
-    
-    def add_player(self, player_id: int, codename : str) -> None:
-        # Inserts a new player
-        # If player_id already exists, this will update codename
         with self.conn.cursor() as cur:
             cur.execute(
-                "UPDATE players SET codename = %s WHERE id = %s",
-                (codename, player_id),
+                "SELECT codename FROM players WHERE id = %s",
+                (player_id,)
             )
-            
-            # If no row updated, insert new
-            if cur.rowcount == 0:
-                cur.execute(
-                    "INSERT INTO players (id, codename) VALUES (%s, %s)",
-                    (player_id, codename),
-                )
-    
-    def close(self):
-        self.conn.close()
+            row = cur.fetchone()
+            return row[0] if row else None
+
+    def add_player(self, player_id: int, codename: str) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO players (id, codename)
+                VALUES (%s, %s)
+                ON CONFLICT (id)
+                DO UPDATE SET codename = EXCLUDED.codename
+            """, (player_id, codename))
+
+    def close(self) -> None:
+        if self.conn:
+            self.conn.close()

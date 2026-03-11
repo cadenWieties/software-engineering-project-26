@@ -1,10 +1,7 @@
-
----
-```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "== Photon Sprint 2 install =="
+echo "== Photon Install =="
 
 # Must be run from repo root
 if [[ ! -f "ui_app.py" ]]; then
