@@ -3,9 +3,9 @@ set -euo pipefail
 
 echo "== Photon Install =="
 
-# Must be run from repo root
+# must be run from repo root
 if [[ ! -f "ui_app.py" ]]; then
-  echo "ERROR: ui_app.py not found. Run this script from the repo root of the project."
+  echo "ERROR: ui_app.py not found. Run this script from the repo root."
   exit 1
 fi
 
@@ -23,20 +23,27 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install psycopg2-binary pillow
 
-echo "== Imports =="
+echo "== Verifying imports =="
 python -c "import tkinter; print('tkinter: OK')"
 python -c "import psycopg2; print('psycopg2: OK')"
 python -c "from PIL import Image; print('pillow: OK')"
 
-echo "== Checking PostgreSQL service (best-effort) =="
+echo "== Checking assets =="
+if [[ ! -f "assets/logo.png" ]]; then
+  echo "WARNING: assets/logo.png not found. Splash screen will show text fallback."
+else
+  echo "assets/logo.png: OK"
+fi
+
+echo "== Checking PostgreSQL service==" 
 if command -v systemctl >/dev/null 2>&1; then
   if systemctl is-active --quiet postgresql; then
     echo "postgresql: active"
   else
-    echo "postgresql: NOT active"
+    echo "postgresql: NOT active — start it with: sudo systemctl start postgresql"
   fi
 else
-  echo "systemctl not available; skipping postgres service check"
+  echo "systemctl not available, skipping postgres check"
 fi
 
 echo ""
