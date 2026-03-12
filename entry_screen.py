@@ -252,6 +252,7 @@ class PlayerEntryScreen(tk.Frame):
         if self.equipment_id_exists(eid):
             messagebox.showerror("Duplicate Hardware", f"Hardware ID {eid} is already assigned")
             return
+        
         target = self.red_team if team == "Red" else self.green_team
         if len(target) >= MAX_PER_TEAM:
             messagebox.showerror("Team Full", f"{team} team is full.")
