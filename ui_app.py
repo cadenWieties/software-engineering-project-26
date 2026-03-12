@@ -1,17 +1,15 @@
 # ui_app.py
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 from splash import SplashScreen
 from entry_screen import PlayerEntryScreen
+from play_action_screen import PlayActionScreen
 
-# Backend imports
 from config import AppConfig
 from db import PlayerDB
 from udp_comm import UDPComm
-
-# isolated laptop testing
 
 class MockDB:
     def __init__(self):
@@ -22,8 +20,10 @@ class MockDB:
 
     def add_player(self, player_id: int, codename: str):
         self.data[player_id] = codename
-        print(f"[MOCK DB] {player_id} -> {codename}")
+        print(f"[MOCK DB] added {player_id} -> {codename}")
 
+    def close(self):
+        pass
 
 class MockUDP:
     def __init__(self):
@@ -31,29 +31,30 @@ class MockUDP:
 
     def set_target_ip(self, ip: str):
         self.target_ip = ip
-        print(f"[MOCK UDP] target ip = {ip}")
+        print(f"[MOCK UDP] target ip set to {ip}")
 
     def send_equipment_id(self, equipment_id: int):
-        print(f"[MOCK UDP] send equipment {equipment_id} to {self.target_ip}:7500")
+        print(f"[MOCK UDP] sent equipment id {equipment_id} to {self.target_ip}:7500")
 
+    def close(self):
+        pass
 
-# app  run
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 LOGO_PATH = os.path.join(ASSETS_DIR, "logo.png")
 if not os.path.exists(LOGO_PATH):
     LOGO_PATH = os.path.join(ASSETS_DIR, "logo.jpg")
 
-
-def center_window(win, w=900, h=520):
+def center_window(win, w=1100, h=650):
     win.update_idletasks()
     sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
     x, y = (sw - w) // 2, (sh - h) // 2
     win.geometry(f"{w}x{h}+{x}+{y}")
 
 
+
 def main():
     root = tk.Tk()
-    root.title("Photon - Sprint 2 UI")
+    root.title("Photon - Sprint 3 UI")
 
     style = ttk.Style()
     try:
@@ -61,39 +62,58 @@ def main():
     except Exception:
         pass
 
-    # Hide main window during splash
     root.withdraw()
 
-    # Create services
     cfg = AppConfig()
-    db = PlayerDB(cfg)
-    udp = UDPComm(cfg)
+
+    # fallback for: real services first, mock if unavailable
+    try:
+        db = PlayerDB(cfg)
+        print("[INFO] Connected to real PostgreSQL database.")
+    except Exception as e:
+        print(f"[WARNING] Could not connect to PostgreSQL. Using MockDB instead.\n{e}")
+        db = MockDB()
+
+    try:
+        udp = UDPComm(cfg)
+        print("[INFO] UDP initialized.")
+    except Exception as e:
+        print(f"[WARNING] Could not initialize UDP. Using MockUDP instead.\n{e}")
+        udp = MockUDP()
 
     container = ttk.Frame(root)
     container.pack(fill="both", expand=True)
 
-    def on_start_game(red_players, green_players):
-        messagebox.showinfo(
-            "Start (Sprint 2 Stub)",
-            f"Red players: {len(red_players)}\nGreen players: {len(green_players)}"
-        )
+    def clear_container():
+        for widget in container.winfo_children():
+            widget.destroy()
 
     def show_entry():
-        root.deiconify()
+        clear_container()
         center_window(root, 900, 520)
 
-        for w in container.winfo_children():
-            w.destroy()
-
-        screen = PlayerEntryScreen(container, db=db, udp=udp, on_start_game=on_start_game)
+        screen = PlayerEntryScreen(
+            container,
+            db=db,
+            udp=udp,
+            on_start_game=show_play_action
+        )
         screen.pack(fill="both", expand=True)
 
-    root._splash = SplashScreen(root, LOGO_PATH, on_done=show_entry, ms=3000)
+    def show_play_action(red_players, green_players):
+        clear_container()
+        center_window(root, 1100, 650)
 
-    root.mainloop()
+        screen = PlayActionScreen(
+            container,
+            red_players=red_players,
+            green_players=green_players,
+            on_back=show_entry
+        )
+        screen.pack(fill="both", expand=True)
+        screen.start_countdown()
 
     def on_close():
-        # Closing function
         try:
             db.close()
         except Exception:
@@ -103,8 +123,15 @@ def main():
         except Exception:
             pass
         root.destroy()
-    
+
     root.protocol("WM_DELETE_WINDOW", on_close)
+
+    def after_splash():
+        root.deiconify()
+        show_entry()
+
+    root._splash = SplashScreen(root, LOGO_PATH, on_done=after_splash, ms=3000)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
