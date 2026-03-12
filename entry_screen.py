@@ -244,7 +244,14 @@ class PlayerEntryScreen(tk.Frame):
         eid = self.parse_int(self.equipment_id_var.get(), "Hardware ID")
         if eid is None:
             return
-
+        
+        if self.player_id_exists(pid):
+            messagebox.showerror("Duplicate Player", f"Player ID {pid} is already asigned")
+            return
+        
+        if self.equipment_id_exists(eid):
+            messagebox.showerror("Duplicate Hardware", f"Hardware ID {eid} is already assigned")
+            return
         target = self.red_team if team == "Red" else self.green_team
         if len(target) >= MAX_PER_TEAM:
             messagebox.showerror("Team Full", f"{team} team is full.")
@@ -265,12 +272,30 @@ class PlayerEntryScreen(tk.Frame):
         self.codename_var.set("")
         self.equipment_id_var.set("")
 
+    def player_id_exists(self, player_id):
+        all_players = self.red_team + self.green_team
+        return any(p.player_id == player_id for p in all_players)
+    
+    def equipment_id_exists(self, equipment_id):
+        all_players = self.red_team + self.green_team
+        return any(p.equipment_id == equipment_id for p in all_players)
+    
     def clear_all(self):
         self.red_team.clear()
         self.green_team.clear()
+        
+        self.player_id_var.set("")
+        self.codename_var.set("")
+        self.equipment_id_var.set("")
+        self.team_var.set("Red")
+        
         self.refresh_lists()
 
     def start(self):
+        if not self.red_team and not self.green_team:
+            messagebox.showerror("No Players", "Add at least one player before starting the game.")
+            return
+        
         self.on_start_game(self.red_team, self.green_team)
 
     def refresh_lists(self):
