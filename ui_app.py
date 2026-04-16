@@ -1,4 +1,3 @@
-# ui_app.py
 import os
 import tkinter as tk
 from tkinter import ttk
@@ -10,6 +9,7 @@ from play_action_screen import PlayActionScreen
 from config import AppConfig
 from db import PlayerDB
 from udp_comm import UDPComm
+
 
 class MockDB:
     def __init__(self):
@@ -25,6 +25,7 @@ class MockDB:
     def close(self):
         pass
 
+
 class MockUDP:
     def __init__(self):
         self.target_ip = "127.0.0.1"
@@ -36,13 +37,18 @@ class MockUDP:
     def send_equipment_id(self, equipment_id: int):
         print(f"[MOCK UDP] sent equipment id {equipment_id} to {self.target_ip}:7500")
 
+    def start_receiver(self, on_message):
+        print("[MOCK UDP] receiver started")
+
     def close(self):
         pass
+
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 LOGO_PATH = os.path.join(ASSETS_DIR, "logo.png")
 if not os.path.exists(LOGO_PATH):
     LOGO_PATH = os.path.join(ASSETS_DIR, "logo.jpg")
+
 
 def center_window(win, w=1100, h=650):
     win.update_idletasks()
@@ -51,10 +57,9 @@ def center_window(win, w=1100, h=650):
     win.geometry(f"{w}x{h}+{x}+{y}")
 
 
-
 def main():
     root = tk.Tk()
-    root.title("Photon - Sprint 3 UI")
+    root.title("Photon - Sprint 4")
 
     style = ttk.Style()
     try:
@@ -63,10 +68,8 @@ def main():
         pass
 
     root.withdraw()
-
     cfg = AppConfig()
 
-    # fallback for: real services first, mock if unavailable
     try:
         db = PlayerDB(cfg)
         print("[INFO] Connected to real PostgreSQL database.")
@@ -108,10 +111,32 @@ def main():
             container,
             red_players=red_players,
             green_players=green_players,
+            udp=udp,
             on_back=show_entry
         )
         screen.pack(fill="both", expand=True)
         screen.start_countdown()
+
+        def handle_udp_message(msg, addr):
+            print(f"[UDP RECEIVED] {msg} from {addr}")
+
+            parts = msg.split(":")
+            if len(parts) != 2:
+                return
+
+            try:
+                first = int(parts[0].strip())
+                second = int(parts[1].strip())
+            except ValueError:
+                return
+
+            if second in (43, 53):
+                root.after(0, lambda: screen.record_base_hit(first, second))
+            else:
+                root.after(0, lambda: screen.record_hit(first, second))
+
+        if hasattr(udp, "start_receiver"):
+            udp.start_receiver(handle_udp_message)
 
     def on_close():
         try:
@@ -132,6 +157,7 @@ def main():
 
     root._splash = SplashScreen(root, LOGO_PATH, on_done=after_splash, ms=3000)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
