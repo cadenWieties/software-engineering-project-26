@@ -8,6 +8,9 @@ try:
 except Exception:
     pygame = None
 
+# Sprint 4 Play Action Screen
+# Handles countdown, 6-minute timer, scoring logic,
+# random music playback, and real-time UI updates
 # COLOR THEMES:
 BG = "#0a0a0a"
 BG_PANEL = "#111111"
@@ -18,6 +21,7 @@ DIM = "#aaaaaa"
 FG = "#e8e8e8"
 FONT = "Courier"
 
+# Sprint 4 requirement: total gameplay duration is 6 minutes
 GAME_SECONDS = 6 * 60  # 6 minutes
 
 
